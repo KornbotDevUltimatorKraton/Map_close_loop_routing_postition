@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
+
+<!-- Create an element where the map will take place -->
+<div id="mapid"></div>
+
+<style>
+#mapid { height: 840px; }
+</style>
+
+<script>
+// Initialize the map
+var mymap = L
+  .map('mapid')
+  .setView([51.5, -0.1], 13); // Initial position and zoom level
+
+// Add a tile to the map (background from OpenStreetMap)
+L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+    maxZoom: 5,
+    }).addTo(mymap);
+
+// Define start and stop positions
+var startPosition = L.latLng(51.5, -0.1);
+var targetPosition = L.latLng(20.1011, -98.7591);
+
+// Create markers for start and target positions
+L.marker(startPosition).addTo(mymap).bindPopup("Start Position").openPopup();
+L.marker(targetPosition).addTo(mymap).bindPopup("Target Position").openPopup();
+
+// Create a polyline (route) from start to target
+var routeLine = L.polyline([startPosition, targetPosition], {color: 'blue'}).addTo(mymap);
+
+// Function to update the map's view dynamically (move the marker incrementally)
+var currentPosition = startPosition;  // Start at the starting point
+var totalDistance = startPosition.distanceTo(targetPosition); // Calculate total distance
+var moveDistance = totalDistance / 10; // Divide the distance into 10 increments (adjustable)
+var moveStep = 0; // Step to track the progress
+
+// Marker to represent the moving object
+var movingMarker = L.marker(currentPosition).addTo(mymap).bindPopup("Moving Object").openPopup();
+
+// Function to move the marker incrementally
+function moveMarker() {
+  // Calculate the current position based on progress (linear interpolation)
+  var latLng = L.latLng(
+    currentPosition.lat + (targetPosition.lat - currentPosition.lat) * (moveStep / 10),
+    currentPosition.lng + (targetPosition.lng - currentPosition.lng) * (moveStep / 10)
+  );
+
+  // Move the marker to the new position
+  movingMarker.setLatLng(latLng);
+
+  // Update the map view with smooth pan and zoom
+  mymap.setView(latLng, 13, { animate: true });
+
+  // Increase the moveStep to progress along the route
+  moveStep++;
+
+  // Stop when the target is reached
+  if (moveStep > 10) {
+    clearInterval(moveInterval); // Stop the interval when target is reached
+    console.log("Target reached. Animation stopped.");
+  }
+}
+
+// Start the movement interval (update every 2 seconds)
+var moveInterval = setInterval(moveMarker, 2000);
+</script>
